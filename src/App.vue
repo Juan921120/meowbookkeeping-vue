@@ -4,7 +4,7 @@ import TheWelcome from './components/TheWelcome.vue'
 </script>
 
 <template>
-  <div id="app">
+  <div id="vue-app">
     <router-view />
   </div>
 </template>
@@ -30,7 +30,7 @@ body {
   overflow-x: hidden;
 }
 
-#app {
+#vue-app {
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
@@ -43,7 +43,7 @@ body {
 
 /* 移动端优化 */
 @media (min-width: 768px) {
-  #app {
+  #vue-app {
     max-width: 768px;
     margin: 0 auto;
     padding: 0 24px;
@@ -52,7 +52,7 @@ body {
 }
 
 @media (min-width: 1024px) {
-  #app {
+  #vue-app {
     max-width: 1024px;
     padding: 0 32px;
   }
