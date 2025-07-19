@@ -41,6 +41,32 @@ export const deleteRecord = (recordId) => {
   saveRecords(filteredRecords)
 }
 
+// 根据ID获取记录
+export const getRecordById = (recordId) => {
+  const records = getRecords()
+  return records.find(record => record.id === recordId)
+}
+
+// 更新记录
+export const updateRecord = (recordId, updatedRecord) => {
+  const records = getRecords()
+  const index = records.findIndex(record => record.id === recordId)
+  
+  if (index === -1) {
+    throw new Error('记录不存在')
+  }
+  
+  records[index] = {
+    ...records[index],
+    ...updatedRecord,
+    id: recordId, // 保持原有ID
+    updatedAt: new Date().toISOString()
+  }
+  
+  saveRecords(records)
+  return records[index]
+}
+
 // 按日期分组记录
 export const groupRecordsByDate = (records) => {
   const groups = {}

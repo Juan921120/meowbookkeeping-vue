@@ -1,6 +1,5 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+// 应用入口组件
 </script>
 
 <template>
@@ -34,28 +33,10 @@ body {
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
-  background: white;
+  background: transparent;
   min-height: 100vh;
   position: relative;
-  padding: 0 12px !important;
   box-sizing: border-box !important;
-}
-
-/* 移动端优化 */
-@media (min-width: 768px) {
-  #vue-app {
-    max-width: 768px;
-    margin: 0 auto;
-    padding: 0 24px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  }
-}
-
-@media (min-width: 1024px) {
-  #vue-app {
-    max-width: 1024px;
-    padding: 0 32px;
-  }
 }
 
 /* 全局样式 */

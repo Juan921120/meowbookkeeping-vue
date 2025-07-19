@@ -35,18 +35,28 @@
 
           <!-- 当日记录 -->
           <div class="records">
-            <div v-for="record in group.records" :key="record.id" class="record-item">
-              <div class="record-left">
-                <div class="category-icon" :style="{ borderColor: getCategoryColor(record.type, record.category) }">
-                  {{ getCategoryIcon(record.type, record.category) }}
+            <div v-for="record in group.records" :key="record.id" class="swipeable-record">
+              <div class="record-content" 
+                   :style="{ transform: `translateX(${record.swipeOffset || 0}px)` }"
+                   @touchstart="handleTouchStart($event, record)"
+                   @touchmove="handleTouchMove($event, record)"
+                   @touchend="handleTouchEnd($event, record)"
+                   @click="editRecord(record.id)">
+                <div class="record-left">
+                  <div class="category-icon" :style="{ borderColor: getCategoryColor(record.type, record.category) }">
+                    {{ getCategoryIcon(record.type, record.category) }}
+                  </div>
+                  <div class="record-info">
+                    <div class="category-name">{{ getCategoryName(record.type, record.category) }}</div>
+                    <div v-if="record.note" class="record-note">{{ record.note }}</div>
+                  </div>
                 </div>
-                <div class="record-info">
-                  <div class="category-name">{{ getCategoryName(record.type, record.category) }}</div>
-                  <div v-if="record.note" class="record-note">{{ record.note }}</div>
+                <div class="record-amount" :class="{ 'income': record.type === 'income' }">
+                  {{ record.type === 'income' ? '+' : '–' }} {{ formatAmount(record.amount) }}
                 </div>
               </div>
-              <div class="record-amount" :class="{ 'income': record.type === 'income' }">
-                {{ record.type === 'income' ? '+' : '–' }} {{ formatAmount(record.amount) }}
+              <div class="delete-button" @click="deleteRecord(record.id)">
+                删除
               </div>
             </div>
           </div>
@@ -59,11 +69,16 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getRecords, groupRecordsByDate, formatDate, formatAmount } from '../utils/storage'
+import { getRecords, groupRecordsByDate, formatDate, formatAmount, deleteRecord as deleteRecordFromStorage } from '../utils/storage'
 import { expenseCategories, incomeCategories } from '../utils/categories'
 
 const router = useRouter()
 const records = ref([])
+
+// 触摸相关状态
+const touchStartX = ref(0)
+const touchStartY = ref(0)
+const isSwiping = ref(false)
 
 // 获取记录数据
 const loadRecords = () => {
@@ -78,6 +93,65 @@ const recordGroups = computed(() => {
 // 跳转到新增页面
 const goToAdd = () => {
   router.push('/add')
+}
+
+// 触摸开始
+const handleTouchStart = (event, record) => {
+  touchStartX.value = event.touches[0].clientX
+  touchStartY.value = event.touches[0].clientY
+  isSwiping.value = false
+}
+
+// 触摸移动
+const handleTouchMove = (event, record) => {
+  if (!touchStartX.value) return
+  
+  const touchX = event.touches[0].clientX
+  const touchY = event.touches[0].clientY
+  const deltaX = touchX - touchStartX.value
+  const deltaY = Math.abs(touchY - touchStartY.value)
+  
+  // 判断是否为水平滑动
+  if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 10) {
+    isSwiping.value = true
+    event.preventDefault()
+    
+    // 只允许向左滑动（负值）
+    const swipeOffset = Math.min(0, Math.max(-80, deltaX))
+    record.swipeOffset = swipeOffset
+  }
+}
+
+// 触摸结束
+const handleTouchEnd = (event, record) => {
+  if (!isSwiping.value) return
+  
+  const deltaX = record.swipeOffset || 0
+  
+  // 如果滑动距离超过40px，显示删除按钮
+  if (deltaX < -40) {
+    record.swipeOffset = -80
+  } else {
+    record.swipeOffset = 0
+  }
+  
+  touchStartX.value = 0
+  isSwiping.value = false
+}
+
+// 删除记录
+const deleteRecord = (recordId) => {
+  if (confirm('确定要删除这条记录吗？')) {
+    deleteRecordFromStorage(recordId)
+    loadRecords() // 重新加载数据
+  }
+}
+
+// 编辑记录
+const editRecord = (recordId) => {
+  // 如果正在滑动，不触发编辑
+  if (isSwiping.value) return
+  router.push(`/edit/${recordId}`)
 }
 
 
@@ -122,10 +196,11 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 0;
+  padding: 20px 12px;
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  width: calc(100% - 24px);
+  margin: 0 12px;
 }
 
 .title {
@@ -159,7 +234,7 @@ onMounted(() => {
 }
 
 .records-container {
-  padding: 16px 0;
+  padding: 16px 12px;
   max-width: 100%;
 }
 
@@ -210,7 +285,8 @@ onMounted(() => {
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  width: calc(100% - 24px);
+  margin: 0 12px;
 }
 
 .date-header {
@@ -266,16 +342,57 @@ onMounted(() => {
   gap: 12px;
 }
 
-.record-item {
+.swipeable-record {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.swipeable-record:last-child {
+  border-bottom: none;
+}
+
+.record-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  background: white;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
 }
 
-.record-item:last-child {
-  border-bottom: none;
+.record-content:hover {
+  background: #f8f9fa;
+}
+
+.delete-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  background: #ff6b6b;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 1;
+  border-radius: 0 8px 8px 0;
+  transition: background-color 0.3s ease;
+}
+
+.delete-button:hover {
+  background: #ff5252;
+}
+
+.delete-button:active {
+  background: #ff4444;
 }
 
 .record-left {

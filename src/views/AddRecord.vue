@@ -79,7 +79,7 @@
         <div class="keypad-row">
           <button class="key-btn" @click="appendNumber('.')">.</button>
           <button class="key-btn" @click="appendNumber('0')">0</button>
-          <button class="key-btn" @click="backspace">×</button>
+          <button class="key-btn backspace-btn" @click="backspace">⌫</button>
           <button class="key-btn submit-btn" @click="saveRecord">完成</button>
         </div>
       </div>
@@ -402,20 +402,18 @@ onMounted(() => {
 .input-section {
   flex: 1;
   background: #ffd93d;
-  padding: 20px 0;
+  padding: 20px 12px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100%;
-  margin: 0 -12px;
-  padding-left: 12px;
-  padding-right: 12px;
+  width: calc(100% - 24px);
+  margin: 0 12px;
 }
 
 .input-bar {
   background: white;
   border-radius: 12px;
-  padding: 16px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -487,6 +485,11 @@ onMounted(() => {
 
 .calendar-icon {
   font-size: 16px;
+}
+
+.backspace-btn {
+  font-size: 16px;
+  color: #666;
 }
 
 .submit-btn {
@@ -653,4 +656,4 @@ onMounted(() => {
     margin: 0 auto;
   }
 }
-</style> 
+</style>
