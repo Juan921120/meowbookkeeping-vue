@@ -1,67 +1,105 @@
 <template>
-  <div class="record-list">
-    <div class="content-container">
-      <header class="header">
-        <h1 class="title">收支记录</h1>
-        <button class="add-btn" @click="goToAdd">
-          <span class="add-icon">+</span>
-          新建
-        </button>
-      </header>
-
-      <!-- 记录列表 -->
-      <div class="records-container">
-        <div v-if="recordGroups.length === 0" class="empty-state">
-          <div class="empty-icon">📊</div>
-          <p class="empty-text">还没有记录哦</p>
-          <p class="empty-subtext">点击右上角"新建"开始记账</p>
+  <div class="content-container">
+    <!-- 统计卡片 -->
+    <JaggedCard class="stats-card-wrapper" border-color="#ff6b6b" border-width="2px" background="white">
+      <div class="stats-card">
+        <div class="stats-header">
+          <h2 class="stats-title">收支视图</h2>
+          <div class="stats-tab-indicator">
+            <div class="tab-line"></div>
+            <div class="tab-marker"></div>
+          </div>
         </div>
+        
+        <!-- 本年结余 -->
+        <div class="stats-row balance-row">
+          <span class="stats-label">本年结余</span>
+          <span class="stats-value balance-value" :class="{ 'negative': annualStats.balance < 0 }">
+            {{ annualStats.balance < 0 ? '-' : '' }} ¥ {{ formatAmount(Math.abs(annualStats.balance)) }}
+          </span>
+        </div>
+        
+        <!-- 本年支出 -->
+        <div class="stats-row">
+          <span class="stats-label">本年支出</span>
+          <div class="stats-bar-container">
+            <div class="stats-bar expense-bar" :style="{ width: expenseBarWidth + '%' }"></div>
+          </div>
+          <span class="stats-value">{{ formatAmount(annualStats.expense) }}</span>
+        </div>
+        
+        <!-- 本年收入 -->
+        <div class="stats-row">
+          <span class="stats-label">本年收入</span>
+          <div class="stats-bar-container">
+            <div class="stats-bar income-bar" :style="{ width: incomeBarWidth + '%' }"></div>
+          </div>
+          <span class="stats-value">{{ annualStats.income > 0 ? formatAmount(annualStats.income) : '暂无' }}</span>
+        </div>
+      </div>
+    </JaggedCard>
 
-        <div v-else class="record-groups">
-          <JaggedCard v-for="group in recordGroups" :key="group.date" class="record-group-card" border-color="#ff6b6b"
-            border-width="2px" background="white">
-            <div class="record-group">
-              <!-- 日期和余额 -->
-              <div class="date-header">
-                <div class="date-info">
-                  <div class="date-line"></div>
-                  <span class="date-text">{{ formatDate(group.date) }}</span>
-                </div>
-                <div class="balance-info">
-                  <span class="balance-label">结余:</span>
-                  <span class="balance-amount" :class="{ 'negative': group.balance < 0 }">
-                    {{ formatAmount(Math.abs(group.balance)) }}
-                  </span>
-                </div>
+    <header class="list-header">
+      <h1 class="title">收支记录</h1>
+      <button class="add-btn" @click="goToAdd">
+        <span class="add-icon">+</span>
+        新建
+      </button>
+    </header>
+
+    <!-- 记录列表 -->
+    <div class="records-container">
+      <div v-if="recordGroups.length === 0" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <p class="empty-text">还没有记录哦</p>
+        <p class="empty-subtext">点击右上角"新建"开始记账</p>
+      </div>
+
+      <div v-else class="record-groups">
+        <JaggedCard v-for="group in recordGroups" :key="group.date" class="record-group-card" border-color="#ff6b6b"
+          border-width="2px" background="white">
+          <div class="record-group">
+            <!-- 日期和余额 -->
+            <div class="date-header">
+              <div class="date-info">
+                <div class="date-line"></div>
+                <span class="date-text">{{ formatDate(group.date) }}</span>
               </div>
+              <div class="balance-info">
+                <span class="balance-label">结余:</span>
+                <span class="balance-amount" :class="{ 'negative': group.balance < 0 }">
+                  {{ formatAmount(Math.abs(group.balance)) }}
+                </span>
+              </div>
+            </div>
 
-              <!-- 当日记录 -->
-              <div class="records">
-                <div v-for="record in group.records" :key="record.id" class="swipeable-record">
-                  <div class="record-content" :style="{ transform: `translateX(${record.swipeOffset || 0}px)` }"
-                    @touchstart="handleTouchStart($event, record)" @touchmove="handleTouchMove($event, record)"
-                    @touchend="handleTouchEnd($event, record)" @click="editRecord(record.id)">
-                    <div class="record-left">
-                      <div class="category-icon" :style="{ borderColor: getCategoryColor(record.type, record.category) }">
-                        {{ getCategoryIcon(record.type, record.category) }}
-                      </div>
-                      <div class="record-info">
-                        <div class="category-name">{{ getCategoryName(record.type, record.category) }}</div>
-                        <div v-if="record.note" class="record-note">{{ record.note }}</div>
-                      </div>
+            <!-- 当日记录 -->
+            <div class="records">
+              <div v-for="record in group.records" :key="record.id" class="swipeable-record">
+                <div class="record-content" :style="{ transform: `translateX(${record.swipeOffset || 0}px)` }"
+                  @touchstart="handleTouchStart($event, record)" @touchmove="handleTouchMove($event, record)"
+                  @touchend="handleTouchEnd($event, record)" @click="editRecord(record.id)">
+                  <div class="record-left">
+                    <div class="category-icon"
+                      :style="{ borderColor: getCategoryColor(record.type, record.category) }">
+                      {{ getCategoryIcon(record.type, record.category) }}
                     </div>
-                    <div class="record-amount" :class="{ 'income': record.type === 'income' }">
-                      {{ record.type === 'income' ? '+' : '–' }} {{ formatAmount(record.amount) }}
+                    <div class="record-info">
+                      <div class="category-name">{{ getCategoryName(record.type, record.category) }}</div>
+                      <div v-if="record.note" class="record-note">{{ record.note }}</div>
                     </div>
                   </div>
-                  <div class="delete-button" @click="deleteRecord(record.id)">
-                    删除
+                  <div class="record-amount" :class="{ 'income': record.type === 'income' }">
+                    {{ record.type === 'income' ? '+' : '–' }} {{ formatAmount(record.amount) }}
                   </div>
+                </div>
+                <div class="delete-button" @click="deleteRecord(record.id)">
+                  删除
                 </div>
               </div>
             </div>
-          </JaggedCard>
-        </div>
+          </div>
+        </JaggedCard>
       </div>
     </div>
   </div>
@@ -90,6 +128,42 @@ const loadRecords = () => {
 // 按日期分组的记录
 const recordGroups = computed(() => {
   return groupRecordsByDate(records.value)
+})
+
+// 计算本年统计数据
+const annualStats = computed(() => {
+  const currentYear = new Date().getFullYear()
+  let totalIncome = 0
+  let totalExpense = 0
+
+  records.value.forEach(record => {
+    const recordYear = new Date(record.date).getFullYear()
+    if (recordYear === currentYear) {
+      if (record.type === 'income') {
+        totalIncome += record.amount
+      } else {
+        totalExpense += record.amount
+      }
+    }
+  })
+
+  return {
+    income: totalIncome,
+    expense: totalExpense,
+    balance: totalIncome - totalExpense
+  }
+})
+
+// 计算支出条宽度百分比
+const expenseBarWidth = computed(() => {
+  const maxAmount = Math.max(annualStats.value.expense, annualStats.value.income, 100)
+  return Math.min((annualStats.value.expense / maxAmount) * 100, 100)
+})
+
+// 计算收入条宽度百分比
+const incomeBarWidth = computed(() => {
+  const maxAmount = Math.max(annualStats.value.expense, annualStats.value.income, 100)
+  return Math.min((annualStats.value.income / maxAmount) * 100, 100)
 })
 
 // 跳转到新增页面
@@ -156,8 +230,6 @@ const editRecord = (recordId) => {
   router.push(`/edit/${recordId}`)
 }
 
-
-
 // 获取分类名称
 const getCategoryName = (type, categoryId) => {
   const categories = type === 'expense' ? expenseCategories : incomeCategories
@@ -185,27 +257,135 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.record-list {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  background-image:
-    radial-gradient(circle at 20px 20px, rgba(255, 193, 7, 0.1) 2px, transparent 2px),
-    radial-gradient(circle at 60px 60px, rgba(255, 193, 7, 0.1) 2px, transparent 2px);
-  background-size: 80px 80px;
-  padding: 20px 0;
-}
-
 .content-container {
   max-width: 600px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 12px;
 }
 
-.header {
+/* 统计卡片样式 */
+.stats-card-wrapper {
+  margin-bottom: 20px;
+}
+
+.stats-card {
+  padding: 24px;
+}
+
+.stats-header {
+  text-align: center;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.stats-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.stats-tab-indicator {
+  position: relative;
+  height: 2px;
+  background: #f0f0f0;
+  border-radius: 1px;
+}
+
+.tab-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: #ff6b6b;
+  border-radius: 1px;
+}
+
+.tab-marker {
+  position: absolute;
+  left: calc(50% - 30px);
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  background: #ff6b6b;
+  border-radius: 50%;
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.stats-row:last-child {
+  margin-bottom: 0;
+}
+
+.balance-row {
+  margin-bottom: 20px;
+}
+
+.stats-label {
+  font-size: 14px;
+  color: #666;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.balance-row .stats-label {
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.stats-bar-container {
+  flex: 1;
+  height: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0 12px;
+}
+
+.stats-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.expense-bar {
+  background: linear-gradient(90deg, #ffd93d, #ff9f43);
+}
+
+.income-bar {
+  background: linear-gradient(90deg, #ffeaa7, #fdcb6e);
+}
+
+.stats-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.balance-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ff6b6b;
+}
+
+.balance-value.negative {
+  color: #ff6b6b;
+}
+
+.list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
 }
 
 .title {
