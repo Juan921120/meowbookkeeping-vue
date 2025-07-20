@@ -306,6 +306,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.empty-icon-img {
+  max-width: 100px;
+  width: 100%;
+  height: auto;
+}
 .content-container {
   max-width: 600px;
   margin: 0 auto;
@@ -491,14 +496,9 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
   text-align: center;
 }
 
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
 
 .empty-text {
   font-size: 18px;
@@ -715,6 +715,7 @@ onUnmounted(() => {
 .record-amount.income {
   color: #00d2d3;
 }
+
 </style>
 
 <style>
