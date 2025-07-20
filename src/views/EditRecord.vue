@@ -1,5 +1,5 @@
 <template>
-  
+  <div class="add-record">
     <!-- 固定顶部区域 -->
     <div class="fixed-header">
       <div class="return-btn">
@@ -7,101 +7,91 @@
           <span class="return-icon"><</span>
         </button>
       </div>
-      <!-- 类型切换 -->
-      <div class="type-header">
+      <!-- 头部类型选择 -->
+      <header class="type-header">
         <div class="type-tabs">
-        <button 
-          class="type-tab" 
-          :class="{ active: record.type === 'expense' }"
-          @click="record.type = 'expense'"
-        >
-          支出
-        </button>
-        <button 
-          class="type-tab" 
-          :class="{ active: record.type === 'income' }"
-          @click="record.type = 'income'"
-        >
-          收入
-        </button>
-      </div>
+          <button 
+            class="type-tab" 
+            :class="{ active: record.type === 'expense' }"
+            @click="record.type = 'expense'"
+          >
+            支出
+          </button>
+          <button 
+            class="type-tab" 
+            :class="{ active: record.type === 'income' }"
+            @click="record.type = 'income'"
+          >
+            收入
+          </button>
+        </div>
+      </header>
     </div>
 
     <!-- 分类选择 - 可滚动区域 -->
     <div class="scrollable-content">
       <div class="category-section">
-        <h3 class="section-title">选择分类</h3>
-        <div class="categories-grid">
-          <div 
-            v-for="category in currentCategories" 
+        <div class="category-grid">
+          <button
+            v-for="category in currentCategories"
             :key="category.id"
             class="category-item"
-            :class="{ active: record.category === category.id }"
+            :class="{ selected: record.category === category.id }"
             @click="record.category = category.id"
           >
-            <div class="category-icon" :style="{ borderColor: category.color }">
+            <div class="category-icon" :style="{ borderColor: 'rgb(255 199 178)' }">
               {{ category.icon }}
             </div>
             <span class="category-name">{{ category.name }}</span>
-          </div>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- 输入区域 -->
     <div class="input-section">
-      <!-- 金额输入 -->
-      <div class="amount-section">
-        <div class="amount-display">
-          <span class="currency">¥</span>
-          <span class="amount">{{ displayAmount }}</span>
-        </div>
-        <div class="keyboard">
-          <div class="keyboard-row">
-            <button class="key" @click="addDigit('1')">1</button>
-            <button class="key" @click="addDigit('2')">2</button>
-            <button class="key" @click="addDigit('3')">3</button>
-          </div>
-          <div class="keyboard-row">
-            <button class="key" @click="addDigit('4')">4</button>
-            <button class="key" @click="addDigit('5')">5</button>
-            <button class="key" @click="addDigit('6')">6</button>
-          </div>
-          <div class="keyboard-row">
-            <button class="key" @click="addDigit('7')">7</button>
-            <button class="key" @click="addDigit('8')">8</button>
-            <button class="key" @click="addDigit('9')">9</button>
-          </div>
-          <div class="keyboard-row">
-            <button class="key" @click="addDecimal">.</button>
-            <button class="key" @click="addDigit('0')">0</button>
-            <button class="key delete" @click="deleteDigit">←</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 备注输入 -->
-      <div class="note-section">
-        <input 
-          v-model="record.note" 
-          type="text" 
-          placeholder="添加备注（可选）"
+      <!-- 备注和金额显示 -->
+      <div class="input-bar">
+        <input
+          v-model="record.note"
+          type="text"
           class="note-input"
-        >
+          placeholder="点击写备注..."
+        />
+        <div class="amount-display">
+          ¥ {{ displayAmount }}
+        </div>
       </div>
 
-      <!-- 日期选择 -->
-      <div class="date-section">
-        <button class="date-button" @click="showCalendar = true">
-          {{ displayDate }}
-        </button>
-      </div>
-
-      <!-- 保存按钮 -->
-      <div class="save-section">
-        <button class="save-btn" @click="saveRecord">
-          保存修改
-        </button>
+      <!-- 数字键盘 -->
+      <div class="keypad">
+        <div class="keypad-row">
+          <button class="key-btn" @click="appendNumber('7')">7</button>
+          <button class="key-btn" @click="appendNumber('8')">8</button>
+          <button class="key-btn" @click="appendNumber('9')">9</button>
+          <button class="key-btn function-btn" @click="showCalendar = true">
+            <span class="calendar-icon">📅</span>
+            {{ displayDate }}
+          </button>
+        </div>
+        <div class="keypad-row">
+          <button class="key-btn" @click="appendNumber('4')">4</button>
+          <button class="key-btn" @click="appendNumber('5')">5</button>
+          <button class="key-btn" @click="appendNumber('6')">6</button>
+          <button class="key-btn function-btn" @click="appendOperator('+')">+</button>
+        </div>
+        <div class="keypad-row">
+          <button class="key-btn" @click="appendNumber('1')">1</button>
+          <button class="key-btn" @click="appendNumber('2')">2</button>
+          <button class="key-btn" @click="appendNumber('3')">3</button>
+          <button class="key-btn function-btn" @click="appendOperator('-')">-</button>
+        </div>
+        <div class="keypad-row">
+          <button class="key-btn" @click="appendNumber('.')">.</button>
+          <button class="key-btn" @click="appendNumber('0')">0</button>
+          <button class="key-btn backspace-btn" @click="backspace">⌫</button>
+          <button class="key-btn submit-btn" @click="saveRecord">完成</button>
+        </div>
       </div>
     </div>
 
@@ -110,32 +100,33 @@
       <div class="calendar-popup" @click.stop>
         <div class="calendar-header">
           <button class="calendar-nav" @click="previousMonth">‹</button>
-          <span class="calendar-title">{{ calendarTitle }}</span>
+          <div class="calendar-title">
+            <span class="calendar-year">{{ currentYear }}年</span>
+            <span class="calendar-month">{{ currentMonth }}月</span>
+          </div>
           <button class="calendar-nav" @click="nextMonth">›</button>
         </div>
-        <div class="calendar-grid">
-          <div class="calendar-weekdays">
-            <span v-for="day in weekdays" :key="day" class="weekday">{{ day }}</span>
-          </div>
-          <div class="calendar-days">
-            <div 
-              v-for="day in calendarDays" 
-              :key="day.date"
-              class="calendar-day"
-              :class="{ 
-                'other-month': !day.currentMonth,
-                'selected': day.date === selectedDateString,
-                'today': day.date === todayString
-              }"
-              @click="selectDate(day.date)"
-            >
-              {{ day.day }}
-            </div>
-          </div>
+        
+        <div class="calendar-weekdays">
+          <span v-for="day in weekdays" :key="day" class="weekday" :class="{ weekend: day === '六' || day === '日' }">
+            {{ day }}
+          </span>
         </div>
-        <div class="calendar-actions">
-          <button class="calendar-btn" @click="selectToday">今天</button>
-          <button class="calendar-btn" @click="showCalendar = false">确定</button>
+        
+        <div class="calendar-days">
+          <button
+            v-for="day in calendarDays"
+            :key="day.key"
+            class="calendar-day"
+            :class="{
+              'other-month': day.otherMonth,
+              'selected': day.selected,
+              'today': day.today
+            }"
+            @click="selectDate(day.date)"
+          >
+            {{ day.day }}
+          </button>
         </div>
       </div>
     </div>
@@ -143,7 +134,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getRecordById, updateRecord } from '../utils/storage'
 import { expenseCategories, incomeCategories } from '../utils/categories'
@@ -160,133 +151,142 @@ const record = ref({
   date: new Date().toISOString().split('T')[0]
 })
 
+// 金额输入
+const amount = ref('0')
+
 // 日历相关
 const showCalendar = ref(false)
-const currentMonth = ref(new Date())
-const selectedDate = ref(new Date())
+const currentYear = ref(new Date().getFullYear())
+const currentMonth = ref(new Date().getMonth() + 1)
+const weekdays = ['一', '二', '三', '四', '五', '六', '日']
 
-// 金额输入
-const amountString = ref('0')
-
-// 计算属性
+// 当前分类列表
 const currentCategories = computed(() => {
   return record.value.type === 'expense' ? expenseCategories : incomeCategories
 })
 
+// 显示金额
 const displayAmount = computed(() => {
-  return amountString.value === '0' ? '0.00' : amountString.value
+  const num = parseFloat(amount.value) || 0
+  return num.toFixed(2)
 })
 
+// 显示选中的日期
 const displayDate = computed(() => {
-  const date = new Date(record.value.date)
   const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+  const selected = new Date(record.value.date)
   
-  if (date.toDateString() === today.toDateString()) {
+  if (selected.toDateString() === today.toDateString()) {
     return '今天'
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return '昨天'
   } else {
-    const weekdays = ['日', '一', '二', '三', '四', '五', '六']
-    const month = date.getMonth() + 1
-    const day = date.getDate()
-    const weekday = weekdays[date.getDay()]
-    return `${month}.${day} 星期${weekday}`
+    const month = selected.getMonth() + 1
+    const day = selected.getDate()
+    return `${month}.${day}`
   }
 })
 
-const calendarTitle = computed(() => {
-  const year = currentMonth.value.getFullYear()
-  const month = currentMonth.value.getMonth() + 1
-  return `${year}年${month}月`
-})
-
+// 日历天数
 const calendarDays = computed(() => {
-  const year = currentMonth.value.getFullYear()
-  const month = currentMonth.value.getMonth()
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
+  const year = currentYear.value
+  const month = currentMonth.value
+  const firstDay = new Date(year, month - 1, 1)
+  const lastDay = new Date(year, month, 0)
   const startDate = new Date(firstDay)
-  startDate.setDate(startDate.getDate() - firstDay.getDay())
+  startDate.setDate(startDate.getDate() - firstDay.getDay() + 1)
   
   const days = []
+  const today = new Date()
+  
   for (let i = 0; i < 42; i++) {
     const date = new Date(startDate)
     date.setDate(startDate.getDate() + i)
+    
+    const isOtherMonth = date.getMonth() !== month - 1
+    const isSelected = date.toDateString() === new Date(record.value.date).toDateString()
+    const isToday = date.toDateString() === today.toDateString()
+    
     days.push({
-      date: date.toISOString().split('T')[0],
+      key: date.toISOString(),
       day: date.getDate(),
-      currentMonth: date.getMonth() === month
+      date: date,
+      otherMonth: isOtherMonth,
+      selected: isSelected,
+      today: isToday
     })
   }
+  
   return days
 })
 
-const selectedDateString = computed(() => {
-  return record.value.date
-})
-
-const todayString = computed(() => {
-  return new Date().toISOString().split('T')[0]
-})
-
-const weekdays = ['日', '一', '二', '三', '四', '五', '六']
-
-// 方法
-const addDigit = (digit) => {
-  if (amountString.value === '0' && digit !== '.') {
-    amountString.value = digit
+// 添加数字
+const appendNumber = (num) => {
+  if (amount.value === '0' && num !== '.') {
+    amount.value = num
+  } else if (num === '.' && amount.value.includes('.')) {
+    return
   } else {
-    amountString.value += digit
+    amount.value += num
   }
   updateAmount()
 }
 
-const addDecimal = () => {
-  if (!amountString.value.includes('.')) {
-    amountString.value += '.'
+// 添加运算符
+const appendOperator = (operator) => {
+  if (amount.value !== '0') {
+    amount.value += operator
   }
   updateAmount()
 }
 
-const deleteDigit = () => {
-  if (amountString.value.length > 1) {
-    amountString.value = amountString.value.slice(0, -1)
+// 退格
+const backspace = () => {
+  if (amount.value.length > 1) {
+    amount.value = amount.value.slice(0, -1)
   } else {
-    amountString.value = '0'
+    amount.value = '0'
   }
   updateAmount()
 }
 
+// 更新金额
 const updateAmount = () => {
-  const amount = parseFloat(amountString.value) || 0
-  record.value.amount = amount
+  const numAmount = parseFloat(amount.value) || 0
+  record.value.amount = numAmount
 }
 
-const selectDate = (dateString) => {
-  record.value.date = dateString
-  selectedDate.value = new Date(dateString)
+// 选择日期
+const selectDate = (date) => {
+  record.value.date = date.toISOString().split('T')[0]
+  // 更新日历显示的月份
+  currentYear.value = date.getFullYear()
+  currentMonth.value = date.getMonth() + 1
   showCalendar.value = false
 }
 
-const selectToday = () => {
-  const today = new Date().toISOString().split('T')[0]
-  selectDate(today)
-}
-
+// 上个月
 const previousMonth = () => {
-  currentMonth.value = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() - 1, 1)
+  if (currentMonth.value === 1) {
+    currentMonth.value = 12
+    currentYear.value--
+  } else {
+    currentMonth.value--
+  }
 }
 
+// 下个月
 const nextMonth = () => {
-  currentMonth.value = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, 1)
+  if (currentMonth.value === 12) {
+    currentMonth.value = 1
+    currentYear.value++
+  } else {
+    currentMonth.value++
+  }
 }
 
-
-
+// 保存记录
 const saveRecord = () => {
-  if (record.value.amount <= 0) {
+  const numAmount = parseFloat(amount.value) || 0
+  if (numAmount <= 0) {
     alert('请输入有效金额')
     return
   }
@@ -304,6 +304,17 @@ const saveRecord = () => {
   }
 }
 
+// 监听类型变化，重置分类
+const resetCategory = () => {
+  const categories = currentCategories.value
+  if (!categories.find(cat => cat.id === record.value.category)) {
+    record.value.category = categories[0]?.id || 'other'
+  }
+}
+
+// 监听记录类型变化
+watch(() => record.value.type, resetCategory)
+
 // 初始化
 onMounted(() => {
   const recordId = route.params.id
@@ -311,8 +322,9 @@ onMounted(() => {
     const existingRecord = getRecordById(recordId)
     if (existingRecord) {
       record.value = { ...existingRecord }
-      amountString.value = existingRecord.amount.toString()
-      selectedDate.value = new Date(existingRecord.date)
+      amount.value = existingRecord.amount.toString()
+      currentYear.value = new Date(existingRecord.date).getFullYear()
+      currentMonth.value = new Date(existingRecord.date).getMonth() + 1
     } else {
       alert('记录不存在')
       router.push('/')
@@ -320,28 +332,42 @@ onMounted(() => {
   } else {
     router.push('/')
   }
+  
+  resetCategory()
 })
 </script>
 
 <style scoped>
-
+.add-record {
+  min-height: 100vh;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+}
 
 /* 固定顶部区域 */
 .fixed-header {
   position: fixed;
+  padding-bottom: 10px;
   top: 0;
   left: 0;
   right: 0;
   z-index: 200;
- 
+  background-image:
+    url('/images/cat-paw.png'),
+    url('/images/cat-paw.png');
+  background-size: 80px 80px, 80px 80px;
+  background-position: 0 0, 40px 40px;
+  background-repeat: repeat, repeat;
+  background-color: #ffe7d6;
 }
 
 .return-btn {
- margin-bottom: 10px;
- display: block;
+ margin: 10px;
 }
 
 .return-btn button {
+  background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
   width: 40px;
@@ -366,59 +392,35 @@ onMounted(() => {
 }
 
 .type-header {
-  padding: 60px 30px 20px 30px; /* 顶部留出返回按钮的空间 */
-  background: transparent;
-  width: 100%;
-}
+ margin: 0 auto;
+  width: 70%;
 
-.back-btn {
-  align-items: center;
-  gap: 4px;
-  border: none;
-  color: #666;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.back-btn:hover {
-  color: #333;
-}
-
-.back-icon {
-  font-size: 20px;
-  font-weight: bold;
 }
 
 .type-tabs {
   display: flex;
-  border-radius: 8px;
 }
 
 .type-tab {
   flex: 1;
-  padding: 4px;
   border: none;
   background: none;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 500;
-  color: #666;
+  color: #999;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .type-tab.active {
-  color: #333;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #ff6b6b;
+  background-image: url('/images/cat-paw.png');
 }
 
 /* 可滚动内容区域 */
 .scrollable-content {
-  margin-top: 140px; /* 为固定顶部区域留出空间 */
+  margin-top: 100px; /* 为固定顶部区域留出空间 */
   flex: 1;
   overflow-y: auto;
   padding-bottom: 300px; /* 为底部输入区域留出空间 */
@@ -426,18 +428,10 @@ onMounted(() => {
 
 .category-section {
   padding: 20px 0;
-  background: rgba(255, 255, 255, 0.9);
   width: 100%;
 }
 
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 16px;
-}
-
-.categories-grid {
+.category-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0px;
@@ -448,9 +442,11 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 12px;
-  border-radius: 8px;
+  background: none;
+  border: none;
   cursor: pointer;
+  padding: 12px 8px;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
@@ -458,8 +454,8 @@ onMounted(() => {
   background: #f8f9fa;
 }
 
-.category-item.active {
-  background: #fff3cd;
+.category-item.selected {
+  background: #fff5f5;
 }
 
 .category-icon {
@@ -472,12 +468,23 @@ onMounted(() => {
   justify-content: center;
   font-size: 20px;
   background: white;
+  transition: all 0.3s ease;
+}
+
+.category-item.selected .category-icon {
+  background: #ff6b6b;
+  color: white;
 }
 
 .category-name {
   font-size: 12px;
   color: #666;
   text-align: center;
+}
+
+.category-item.selected .category-name {
+  color: #ff6b6b;
+  font-weight: 500;
 }
 
 .input-section {
@@ -490,55 +497,63 @@ onMounted(() => {
   flex-direction: column;
   gap: 20px;
   z-index: 100;
+  background-image:
+    url('/images/cat-paw.png'),
+    url('/images/cat-paw.png');
+  background-size: 80px 80px, 80px 80px;
+  background-position: 0 0, 40px 40px;
+  background-repeat: repeat, repeat;
+  background-color: #FFEEE2;
 }
 
-.amount-section {
+.input-bar {
+  background: white;
+  padding: 16px 20px;
+  border-radius: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.note-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #333;
+  background: none;
+}
+
+.note-input::placeholder {
+  color: #999;
 }
 
 .amount-display {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.currency {
-  font-size: 24px;
-  color: #333;
-  font-weight: 500;
-}
-
-.amount {
-  font-size: 32px;
-  color: #333;
+  font-size: 20px;
   font-weight: bold;
+  color: #333;
+  margin-left: 16px;
 }
 
-.keyboard {
+.keypad {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.keyboard-row {
-  display: flex;
-  gap: 8px;
+.keypad-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 12px;
 }
 
-.key {
-  flex: 1;
-  height: 60px;
+.key-btn {
+  height: 56px;
   border: none;
+  border-radius: 12px;
   background: white;
-  border-radius: 8px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
   color: #333;
   cursor: pointer;
@@ -546,86 +561,44 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.key:hover {
+.key-btn:hover {
   background: #f8f9fa;
+  transform: translateY(-1px);
 }
 
-.key:active {
-  transform: scale(0.95);
+.key-btn:active {
+  transform: translateY(0);
 }
 
-.key.delete {
+.function-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.calendar-icon {
+  font-size: 16px;
+}
+
+.backspace-btn {
+  font-size: 16px;
+  color: #666;
+}
+
+.submit-btn {
   background: #ff6b6b;
   color: white;
+  font-size: 16px;
+  font-weight: bold;
 }
 
-.key.delete:hover {
+.submit-btn:hover {
   background: #ff5252;
 }
 
-.note-section {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.note-input {
-  width: 100%;
-  border: none;
-  outline: none;
-  font-size: 16px;
-  color: #333;
-  background: transparent;
-}
-
-.note-input::placeholder {
-  color: #999;
-}
-
-.date-section {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.date-button {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  background: none;
-  font-size: 16px;
-  color: #333;
-  cursor: pointer;
-  text-align: left;
-}
-
-.save-section {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.save-btn {
-  width: 100%;
-  padding: 16px;
-  border: none;
-  background: #ff6b6b;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.save-btn:hover {
-  background: #ff5252;
-}
-
-/* 日历弹窗 */
 .calendar-overlay {
   position: fixed;
   top: 0;
@@ -641,57 +614,66 @@ onMounted(() => {
 
 .calendar-popup {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
   width: 90%;
   max-width: 320px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .calendar-nav {
   width: 32px;
   height: 32px;
   border: none;
-  background: #f0f0f0;
+  background: #f5f5f5;
   border-radius: 50%;
   font-size: 18px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.calendar-nav:hover {
-  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .calendar-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.calendar-grid {
-  margin-bottom: 16px;
+.calendar-year {
+  font-size: 16px;
+  color: #999;
+}
+
+.calendar-month {
+  font-size: 18px;
+  color: #ff6b6b;
+  font-weight: bold;
+  border-bottom: 2px dashed #ff6b6b;
 }
 
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .weekday {
   text-align: center;
-  font-size: 12px;
-  color: #999;
+  font-size: 14px;
+  color: #666;
   padding: 8px 0;
+}
+
+.weekday.weekend {
+  color: #ff6b6b;
 }
 
 .calendar-days {
@@ -701,84 +683,73 @@ onMounted(() => {
 }
 
 .calendar-day {
-  aspect-ratio: 1;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  border-radius: 4px;
   transition: all 0.3s ease;
-}
-
-.calendar-day:hover {
-  background: #f0f0f0;
 }
 
 .calendar-day.other-month {
   color: #ccc;
 }
 
-.calendar-day.selected {
-  background: #ff6b6b;
-  color: white;
-}
-
 .calendar-day.today {
   background: #ffd93d;
   color: #333;
-  font-weight: 600;
+  font-weight: bold;
 }
 
-.calendar-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.calendar-btn {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.calendar-btn:first-child {
-  background: #f0f0f0;
-  color: #333;
-}
-
-.calendar-btn:last-child {
+.calendar-day.selected {
   background: #ff6b6b;
   color: white;
+  font-weight: bold;
 }
 
-.calendar-btn:hover {
-  opacity: 0.8;
+.calendar-day:hover:not(.other-month) {
+  background: #f0f0f0;
 }
 
 @media (max-width: 480px) {
-  .categories-grid {
+  .category-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
   }
   
-  .category-icon {
-    width: 40px;
-    height: 40px;
+  .keypad-row {
+    gap: 8px;
+  }
+  
+  .key-btn {
+    height: 48px;
     font-size: 16px;
   }
-  
-  .amount {
-    font-size: 28px;
+}
+
+@media (min-width: 768px) {
+  .category-section {
+    padding: 24px 0;
   }
   
-  .key {
-    height: 50px;
-    font-size: 18px;
+  .category-grid {
+    max-width: 600px;
+    margin: 0 auto;
+    grid-template-columns: repeat(6, 1fr);
+  }
+  
+  .input-section {
+    padding: 24px 0;
+  }
+  
+  .keypad {
+    max-width: 500px;
+    margin: 0 auto;
   }
 }
 </style> 

@@ -4,21 +4,21 @@
     <JaggedCard class="stats-card-wrapper" border-color="#ff6b6b" border-width="2px" background="white">
       <div class="stats-card">
         <div class="stats-header">
-          <h2 class="stats-title">收支视图</h2>
+          <h2 class="stats-title">收支统计</h2>
           <div class="stats-tab-indicator">
             <div class="tab-line"></div>
-            <div class="tab-marker"></div>
+
           </div>
         </div>
-        
+
         <!-- 本年结余 -->
         <div class="stats-row balance-row">
           <span class="stats-label">本年结余</span>
           <span class="stats-value balance-value" :class="{ 'negative': annualStats.balance < 0 }">
-            {{ annualStats.balance < 0 ? '-' : '' }} ¥ {{ formatAmount(Math.abs(annualStats.balance)) }}
+            {{ annualStats.balance < 0 ? '-' : '' }} {{ formatAmount(Math.abs(annualStats.balance)) }}
           </span>
         </div>
-        
+
         <!-- 本年支出 -->
         <div class="stats-row">
           <span class="stats-label">本年支出</span>
@@ -27,7 +27,7 @@
           </div>
           <span class="stats-value">{{ formatAmount(annualStats.expense) }}</span>
         </div>
-        
+
         <!-- 本年收入 -->
         <div class="stats-row">
           <span class="stats-label">本年收入</span>
@@ -80,8 +80,7 @@
                   @touchstart="handleTouchStart($event, record)" @touchmove="handleTouchMove($event, record)"
                   @touchend="handleTouchEnd($event, record)" @click="editRecord(record.id)">
                   <div class="record-left">
-                    <div class="category-icon"
-                      :style="{ borderColor: getCategoryColor(record.type, record.category) }">
+                    <div class="category-icon" :style="{ borderColor: getCategoryColor(record.type, record.category) }">
                       {{ getCategoryIcon(record.type, record.category) }}
                     </div>
                     <div class="record-info">
@@ -246,9 +245,7 @@ const getCategoryIcon = (type, categoryId) => {
 
 // 获取分类颜色
 const getCategoryColor = (type, categoryId) => {
-  const categories = type === 'expense' ? expenseCategories : incomeCategories
-  const category = categories.find(cat => cat.id === categoryId)
-  return category ? category.color : '#c8d6e5'
+  return 'rgb(255 199 178)'
 }
 
 onMounted(() => {
@@ -268,12 +265,8 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-.stats-card {
-  padding: 24px;
-}
 
 .stats-header {
-  text-align: center;
   margin-bottom: 24px;
   position: relative;
 }
@@ -294,7 +287,7 @@ onMounted(() => {
 
 .tab-line {
   position: absolute;
-  left: 50%;
+  left: 10%;
   transform: translateX(-50%);
   width: 60px;
   height: 2px;
@@ -302,14 +295,9 @@ onMounted(() => {
   border-radius: 1px;
 }
 
-.tab-marker {
-  position: absolute;
-  left: calc(50% - 30px);
-  top: -2px;
-  width: 6px;
-  height: 6px;
-  background: #ff6b6b;
-  border-radius: 50%;
+div.stats-row.balance-row {
+  display: flex;
+  justify-content: space-between;
 }
 
 .stats-row {
@@ -356,11 +344,11 @@ onMounted(() => {
 }
 
 .expense-bar {
-  background: linear-gradient(90deg, #ffd93d, #ff9f43);
+  background:#ff8f58;
 }
 
 .income-bar {
-  background: linear-gradient(90deg, #ffeaa7, #fdcb6e);
+  background: #f5ad03;
 }
 
 .stats-value {

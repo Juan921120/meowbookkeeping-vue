@@ -39,7 +39,7 @@
             :class="{ selected: selectedCategory === category.id }"
             @click="selectedCategory = category.id"
           >
-            <div class="category-icon" :style="{ borderColor: category.color }">
+            <div class="category-icon" :style="{ borderColor: 'rgb(255 199 178)' }">
               {{ category.icon }}
             </div>
             <span class="category-name">{{ category.name }}</span>
