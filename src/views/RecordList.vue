@@ -50,7 +50,9 @@
     <!-- 记录列表 -->
     <div class="records-container">
       <div v-if="recordGroups.length === 0" class="empty-state">
-        <div class="empty-icon">📊</div>
+        <div class="empty-icon">
+          <img src="/images/empty-state.png" alt="empty" class="empty-icon-img">
+        </div>
         <p class="empty-text">还没有记录哦</p>
         <p class="empty-subtext">点击右上角"新建"开始记账</p>
       </div>
