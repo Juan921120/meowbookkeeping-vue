@@ -284,7 +284,7 @@ const nextMonth = () => {
 }
 
 // 保存记录
-const saveRecord = () => {
+const saveRecord = async () => {
   const numAmount = parseFloat(amount.value) || 0
   if (numAmount <= 0) {
     alert('请输入有效金额')
@@ -297,7 +297,7 @@ const saveRecord = () => {
   }
   
   try {
-    updateRecord(record.value.id, record.value)
+    await updateRecord(record.value.id, record.value)
     router.push('/')
   } catch (error) {
     alert('保存失败：' + error.message)
@@ -316,17 +316,22 @@ const resetCategory = () => {
 watch(() => record.value.type, resetCategory)
 
 // 初始化
-onMounted(() => {
+onMounted(async () => {
   const recordId = route.params.id
   if (recordId) {
-    const existingRecord = getRecordById(recordId)
-    if (existingRecord) {
-      record.value = { ...existingRecord }
-      amount.value = existingRecord.amount.toString()
-      currentYear.value = new Date(existingRecord.date).getFullYear()
-      currentMonth.value = new Date(existingRecord.date).getMonth() + 1
-    } else {
-      alert('记录不存在')
+    try {
+      const existingRecord = await getRecordById(recordId)
+      if (existingRecord) {
+        record.value = { ...existingRecord }
+        amount.value = existingRecord.amount.toString()
+        currentYear.value = new Date(existingRecord.date).getFullYear()
+        currentMonth.value = new Date(existingRecord.date).getMonth() + 1
+      } else {
+        alert('记录不存在')
+        router.push('/')
+      }
+    } catch (error) {
+      alert('加载记录失败：' + error.message)
       router.push('/')
     }
   } else {
@@ -448,6 +453,11 @@ onMounted(() => {
   padding: 12px 8px;
   border-radius: 8px;
   transition: all 0.3s ease;
+  /* 禁用双击缩放 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .category-item:hover {
@@ -559,6 +569,11 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* 禁用双击缩放 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .key-btn:hover {
@@ -593,6 +608,11 @@ onMounted(() => {
   color: white;
   font-size: 16px;
   font-weight: bold;
+  /* 禁用双击缩放 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .submit-btn:hover {

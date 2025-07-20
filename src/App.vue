@@ -18,6 +18,14 @@
 html {
   width: 100%;
   overflow-x: hidden;
+  /* 禁用双击缩放 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 body {
@@ -27,6 +35,14 @@ body {
   padding: 0;
   width: 100%;
   overflow-x: hidden;
+  /* 禁用双击缩放和选择 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 #vue-app {

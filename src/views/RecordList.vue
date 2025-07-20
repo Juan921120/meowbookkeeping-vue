@@ -1,5 +1,11 @@
 <template>
   <div class="content-container">
+    <!-- 网络状态指示器 -->
+    <div v-if="!isOnline" class="offline-indicator">
+      <div class="offline-icon">📡</div>
+      <span class="offline-text">离线模式 - 数据将保存到本地</span>
+    </div>
+
     <!-- 统计卡片 -->
     <JaggedCard class="stats-card-wrapper" border-color="#ff6b6b" border-width="2px" background="white">
       <div class="stats-card">
@@ -49,7 +55,14 @@
 
     <!-- 记录列表 -->
     <div class="records-container">
-      <div v-if="recordGroups.length === 0" class="empty-state">
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">加载中...</p>
+      </div>
+      
+      <!-- 空状态 -->
+      <div v-else-if="recordGroups.length === 0" class="empty-state">
         <div class="empty-icon">
           <img src="/images/empty-state.png" alt="empty" class="empty-icon-img">
         </div>
@@ -108,22 +121,44 @@
 
 <script setup>
 import JaggedCard from '../components/JaggedCard.vue'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getRecords, groupRecordsByDate, formatDate, formatAmount, deleteRecord as deleteRecordFromStorage } from '../utils/storage'
 import { expenseCategories, incomeCategories } from '../utils/categories'
 
 const router = useRouter()
 const records = ref([])
+const loading = ref(false)
+const isOnline = ref(navigator.onLine)
 
 // 触摸相关状态
 const touchStartX = ref(0)
 const touchStartY = ref(0)
 const isSwiping = ref(false)
 
+// 监听网络状态变化
+const handleOnline = () => {
+  isOnline.value = true
+  console.log('网络已连接')
+}
+
+const handleOffline = () => {
+  isOnline.value = false
+  console.log('网络已断开')
+}
+
 // 获取记录数据
-const loadRecords = () => {
-  records.value = getRecords()
+const loadRecords = async () => {
+  loading.value = true
+  try {
+    records.value = await getRecords()
+  } catch (error) {
+    console.error('加载记录失败:', error)
+    // 如果API失败，可以回退到本地存储
+    records.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 // 按日期分组的记录
@@ -140,10 +175,11 @@ const annualStats = computed(() => {
   records.value.forEach(record => {
     const recordYear = new Date(record.date).getFullYear()
     if (recordYear === currentYear) {
+      const amount = parseFloat(record.amount) || 0
       if (record.type === 'income') {
-        totalIncome += record.amount
+        totalIncome += amount
       } else {
-        totalExpense += record.amount
+        totalExpense += amount
       }
     }
   })
@@ -217,10 +253,14 @@ const handleTouchEnd = (event, record) => {
 }
 
 // 删除记录
-const deleteRecord = (recordId) => {
+const deleteRecord = async (recordId) => {
   if (confirm('确定要删除这条记录吗？')) {
-    deleteRecordFromStorage(recordId)
-    loadRecords() // 重新加载数据
+    try {
+      await deleteRecordFromStorage(recordId)
+      await loadRecords() // 重新加载数据
+    } catch (error) {
+      alert('删除失败：' + error.message)
+    }
   }
 }
 
@@ -252,6 +292,16 @@ const getCategoryColor = (type, categoryId) => {
 
 onMounted(() => {
   loadRecords()
+  
+  // 添加网络状态监听
+  window.addEventListener('online', handleOnline)
+  window.addEventListener('offline', handleOffline)
+})
+
+onUnmounted(() => {
+  // 移除网络状态监听
+  window.removeEventListener('online', handleOnline)
+  window.removeEventListener('offline', handleOffline)
 })
 </script>
 
@@ -262,11 +312,33 @@ onMounted(() => {
   padding: 12px;
 }
 
+/* 离线状态指示器 */
+.offline-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #856404;
+}
+
+.offline-icon {
+  font-size: 16px;
+}
+
+.offline-text {
+  font-weight: 500;
+}
+
 /* 统计卡片样式 */
 .stats-card-wrapper {
   margin-bottom: 20px;
 }
-
 
 .stats-header {
   margin-bottom: 24px;
@@ -297,16 +369,14 @@ onMounted(() => {
   border-radius: 1px;
 }
 
-div.stats-row.balance-row {
-  display: flex;
-  justify-content: space-between;
+.stats-card {
+  padding: 20px;
 }
 
 .stats-row {
   display: flex;
   align-items: center;
   margin-bottom: 16px;
-  gap: 12px;
 }
 
 .stats-row:last-child {
@@ -315,28 +385,23 @@ div.stats-row.balance-row {
 
 .balance-row {
   margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .stats-label {
-  font-size: 14px;
-  color: #666;
-  min-width: 70px;
-  flex-shrink: 0;
-}
-
-.balance-row .stats-label {
+  flex: 1;
   font-size: 16px;
-  color: #333;
-  font-weight: 500;
+  color: #666;
 }
 
 .stats-bar-container {
-  flex: 1;
+  flex: 2;
   height: 8px;
-  background: #f5f5f5;
+  background: #f0f0f0;
   border-radius: 4px;
-  overflow: hidden;
   margin: 0 12px;
+  overflow: hidden;
 }
 
 .stats-bar {
@@ -346,61 +411,68 @@ div.stats-row.balance-row {
 }
 
 .expense-bar {
-  background:#ff8f58;
+  background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
 }
 
 .income-bar {
-  background: #f5ad03;
+  background: linear-gradient(90deg, #ff8a24, #ff9854);
 }
 
 .stats-value {
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 600;
   color: #333;
-  font-weight: 500;
-  min-width: 60px;
+  min-width: 80px;
   text-align: right;
-  flex-shrink: 0;
 }
 
 .balance-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #ff6b6b;
+  font-size: 20px;
+  color: #00d2d3;
 }
 
 .balance-value.negative {
   color: #ff6b6b;
 }
 
+/* 列表头部 */
 .list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
 }
 
 .title {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 600;
   color: #333;
+  margin: 0;
 }
 
 .add-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: none;
+  gap: 8px;
+  background: #ff6b6b;
+  color: white;
   border: none;
-  color: #ff6b6b;
+  border-radius: 8px;
+  padding: 12px 16px;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  /* 禁用双击缩放 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .add-btn:hover {
-  background-color: rgba(255, 107, 107, 0.1);
+  background: #ff5252;
+  transform: translateY(-2px);
 }
 
 .add-icon {
@@ -408,10 +480,12 @@ div.stats-row.balance-row {
   font-weight: bold;
 }
 
+/* 记录列表容器 */
 .records-container {
-  width: 100%;
+  min-height: 200px;
 }
 
+/* 空状态样式 */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -435,6 +509,36 @@ div.stats-row.balance-row {
 .empty-subtext {
   font-size: 14px;
   color: #999;
+}
+
+/* 加载状态样式 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff6b6b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.loading-text {
+  font-size: 16px;
+  color: #666;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .record-groups {
@@ -524,6 +628,11 @@ div.stats-row.balance-row {
   position: relative;
   z-index: 2;
   cursor: pointer;
+  /* 禁用双击缩放 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .record-content:hover {
@@ -548,6 +657,11 @@ div.stats-row.balance-row {
   z-index: 1;
   border-radius: 0 8px 8px 0;
   transition: background-color 0.3s ease;
+  /* 禁用双击缩放 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .delete-button:hover {
