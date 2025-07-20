@@ -1,4 +1,15 @@
 <template>
+  <div class="container">
+    <JaggedCard 
+      class="jagged-card"
+      border-color="#ff6b6b"
+      border-width="4px"
+      background="#fff5f5"
+    >
+      <h3>Vue3 卡片</h3>
+      <p>这是一个带有抖动边框的卡片组件</p> 
+    </JaggedCard>
+  </div>
   <div class="record-list">
     <!-- 头部 -->
     <header class="header">
@@ -36,12 +47,9 @@
           <!-- 当日记录 -->
           <div class="records">
             <div v-for="record in group.records" :key="record.id" class="swipeable-record">
-              <div class="record-content" 
-                   :style="{ transform: `translateX(${record.swipeOffset || 0}px)` }"
-                   @touchstart="handleTouchStart($event, record)"
-                   @touchmove="handleTouchMove($event, record)"
-                   @touchend="handleTouchEnd($event, record)"
-                   @click="editRecord(record.id)">
+              <div class="record-content" :style="{ transform: `translateX(${record.swipeOffset || 0}px)` }"
+                @touchstart="handleTouchStart($event, record)" @touchmove="handleTouchMove($event, record)"
+                @touchend="handleTouchEnd($event, record)" @click="editRecord(record.id)">
                 <div class="record-left">
                   <div class="category-icon" :style="{ borderColor: getCategoryColor(record.type, record.category) }">
                     {{ getCategoryIcon(record.type, record.category) }}
@@ -67,6 +75,7 @@
 </template>
 
 <script setup>
+import JaggedCard from './JaggedCard.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getRecords, groupRecordsByDate, formatDate, formatAmount, deleteRecord as deleteRecordFromStorage } from '../utils/storage'
@@ -105,17 +114,17 @@ const handleTouchStart = (event, record) => {
 // 触摸移动
 const handleTouchMove = (event, record) => {
   if (!touchStartX.value) return
-  
+
   const touchX = event.touches[0].clientX
   const touchY = event.touches[0].clientY
   const deltaX = touchX - touchStartX.value
   const deltaY = Math.abs(touchY - touchStartY.value)
-  
+
   // 判断是否为水平滑动
   if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 10) {
     isSwiping.value = true
     event.preventDefault()
-    
+
     // 只允许向左滑动（负值）
     const swipeOffset = Math.min(0, Math.max(-80, deltaX))
     record.swipeOffset = swipeOffset
@@ -125,16 +134,16 @@ const handleTouchMove = (event, record) => {
 // 触摸结束
 const handleTouchEnd = (event, record) => {
   if (!isSwiping.value) return
-  
+
   const deltaX = record.swipeOffset || 0
-  
+
   // 如果滑动距离超过40px，显示删除按钮
   if (deltaX < -40) {
     record.swipeOffset = -80
   } else {
     record.swipeOffset = 0
   }
-  
+
   touchStartX.value = 0
   isSwiping.value = false
 }
@@ -183,10 +192,27 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.jagged-card {
+  width: calc(100% - 24px);
+  margin: 0 auto;
+  display: block; 
+  margin-top: 10px;
+}
+
+/* 自定义JaggedCard的样式 */
+.jagged-card :deep(.jagged-wrapper::before) {
+  border-color: #ff0000 !important; /* 纯红色边框 - 测试用 */
+  border-width: 10px !important; /* 很粗的边框 - 测试用 */
+}
+
+.jagged-card :deep(.card-content) {
+  padding: 24px !important; /* 更大的内边距 */
+}
+
 .record-list {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  background-image: 
+  background-image:
     radial-gradient(circle at 20px 20px, rgba(255, 193, 7, 0.1) 2px, transparent 2px),
     radial-gradient(circle at 60px 60px, rgba(255, 193, 7, 0.1) 2px, transparent 2px);
   background-size: 80px 80px;
@@ -242,7 +268,7 @@ onMounted(() => {
   .records-container {
     padding: 24px 0;
   }
-  
+
   .record-groups {
     max-width: 600px;
     margin: 0 auto;
@@ -443,13 +469,13 @@ onMounted(() => {
   .header {
     padding: 16px 12px;
   }
-  
+
   .records-container {
     padding: 12px;
   }
-  
+
   .record-group {
     padding: 12px;
   }
 }
-</style> 
+</style>
