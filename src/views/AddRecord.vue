@@ -1,40 +1,50 @@
 <template>
   <div class="add-record">
-    <!-- 头部类型选择 -->
-    <header class="type-header">
-      <div class="type-tabs">
-        <button 
-          class="type-tab" 
-          :class="{ active: recordType === 'expense' }"
-          @click="recordType = 'expense'"
-        >
-          支出
-        </button>
-        <button 
-          class="type-tab" 
-          :class="{ active: recordType === 'income' }"
-          @click="recordType = 'income'"
-        >
-          收入
+    <!-- 固定顶部区域 -->
+    <div class="fixed-header">
+      <div class="return-btn">
+        <button @click="router.back()">
+          <span class="return-icon"><</span>
         </button>
       </div>
-    </header>
+      <!-- 头部类型选择 -->
+      <header class="type-header">
+        <div class="type-tabs">
+          <button 
+            class="type-tab" 
+            :class="{ active: recordType === 'expense' }"
+            @click="recordType = 'expense'"
+          >
+            支出
+          </button>
+          <button 
+            class="type-tab" 
+            :class="{ active: recordType === 'income' }"
+            @click="recordType = 'income'"
+          >
+            收入
+          </button>
+        </div>
+      </header>
+    </div>
 
-    <!-- 分类选择 -->
-    <div class="category-section">
-      <div class="category-grid">
-        <button
-          v-for="category in currentCategories"
-          :key="category.id"
-          class="category-item"
-          :class="{ selected: selectedCategory === category.id }"
-          @click="selectedCategory = category.id"
-        >
-          <div class="category-icon" :style="{ borderColor: category.color }">
-            {{ category.icon }}
-          </div>
-          <span class="category-name">{{ category.name }}</span>
-        </button>
+    <!-- 分类选择 - 可滚动区域 -->
+    <div class="scrollable-content">
+      <div class="category-section">
+        <div class="category-grid">
+          <button
+            v-for="category in currentCategories"
+            :key="category.id"
+            class="category-item"
+            :class="{ selected: selectedCategory === category.id }"
+            @click="selectedCategory = category.id"
+          >
+            <div class="category-icon" :style="{ borderColor: category.color }">
+              {{ category.icon }}
+            </div>
+            <span class="category-name">{{ category.name }}</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -295,32 +305,69 @@ onMounted(() => {
 <style scoped>
 .add-record {
   min-height: 100vh;
-  background: white;
+  background: transparent;
   display: flex;
   flex-direction: column;
 }
 
+/* 固定顶部区域 */
+.fixed-header {
+  position: fixed;
+  padding-bottom: 10px;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background-image:
+    url('/images/cat-paw.png'),
+    url('/images/cat-paw.png');
+  background-size: 80px 80px, 80px 80px;
+  background-position: 0 0, 40px 40px;
+  background-repeat: repeat, repeat;
+  background-color: #ffe7d6;
+}
+
+.return-btn {
+ margin: 10px;
+}
+
+.return-btn button {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.return-btn button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.return-icon {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
 .type-header {
-  padding: 20px 0;
-  background: white;
-  border-bottom: 1px solid #f0f0f0;
-  background-image: 
-    radial-gradient(circle at 20px 20px, rgba(255, 193, 7, 0.1) 2px, transparent 2px),
-    radial-gradient(circle at 60px 60px, rgba(255, 193, 7, 0.1) 2px, transparent 2px);
-  background-size: 80px 80px;
-  width: 100%;
+ margin: 0 auto;
+  width: 70%;
+
 }
 
 .type-tabs {
   display: flex;
-  background: #f5f5f5;
-  border-radius: 8px;
-  padding: 4px;
 }
 
 .type-tab {
   flex: 1;
-  padding: 12px;
   border: none;
   background: none;
   border-radius: 6px;
@@ -332,21 +379,28 @@ onMounted(() => {
 }
 
 .type-tab.active {
-  background: white;
   color: #ff6b6b;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-image: url('/images/cat-paw.png');
+}
+
+/* 可滚动内容区域 */
+.scrollable-content {
+  margin-top: 100px; /* 为固定顶部区域留出空间 */
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 300px; /* 为底部输入区域留出空间 */
+  padding-bottom: 300px; /* 为底部输入区域留出空间 */
 }
 
 .category-section {
   padding: 20px 0;
-  background: white;
   width: 100%;
 }
 
 .category-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
+  gap: 0px;
 }
 
 .category-item {
@@ -400,20 +454,28 @@ onMounted(() => {
 }
 
 .input-section {
-  flex: 1;
-  background: #ffd93d;
-  padding: 20px 12px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: calc(100% - 24px);
-  margin: 0 12px;
+  z-index: 100;
+  background-image:
+    url('/images/cat-paw.png'),
+    url('/images/cat-paw.png');
+  background-size: 80px 80px, 80px 80px;
+  background-position: 0 0, 40px 40px;
+  background-repeat: repeat, repeat;
+  background-color: #FFEEE2;
 }
 
 .input-bar {
   background: white;
-  border-radius: 12px;
   padding: 16px 20px;
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;

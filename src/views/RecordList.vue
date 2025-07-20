@@ -1,73 +1,66 @@
 <template>
-  <div class="container">
-    <JaggedCard 
-      class="jagged-card"
-      border-color="#ff6b6b"
-      border-width="4px"
-      background="#fff5f5"
-    >
-      <h3>Vue3 卡片</h3>
-      <p>这是一个带有抖动边框的卡片组件</p> 
-    </JaggedCard>
-  </div>
   <div class="record-list">
-    <!-- 头部 -->
-    <header class="header">
-      <h1 class="title">收支记录</h1>
-      <button class="add-btn" @click="goToAdd">
-        <span class="add-icon">+</span>
-        新建
-      </button>
-    </header>
+    <div class="content-container">
+      <header class="header">
+        <h1 class="title">收支记录</h1>
+        <button class="add-btn" @click="goToAdd">
+          <span class="add-icon">+</span>
+          新建
+        </button>
+      </header>
 
-    <!-- 记录列表 -->
-    <div class="records-container">
-      <div v-if="recordGroups.length === 0" class="empty-state">
-        <div class="empty-icon">📊</div>
-        <p class="empty-text">还没有记录哦</p>
-        <p class="empty-subtext">点击右上角"新建"开始记账</p>
-      </div>
+      <!-- 记录列表 -->
+      <div class="records-container">
+        <div v-if="recordGroups.length === 0" class="empty-state">
+          <div class="empty-icon">📊</div>
+          <p class="empty-text">还没有记录哦</p>
+          <p class="empty-subtext">点击右上角"新建"开始记账</p>
+        </div>
 
-      <div v-else class="record-groups">
-        <div v-for="group in recordGroups" :key="group.date" class="record-group">
-          <!-- 日期和余额 -->
-          <div class="date-header">
-            <div class="date-info">
-              <div class="date-line"></div>
-              <span class="date-text">{{ formatDate(group.date) }}</span>
-            </div>
-            <div class="balance-info">
-              <span class="balance-label">结余:</span>
-              <span class="balance-amount" :class="{ 'negative': group.balance < 0 }">
-                {{ formatAmount(Math.abs(group.balance)) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- 当日记录 -->
-          <div class="records">
-            <div v-for="record in group.records" :key="record.id" class="swipeable-record">
-              <div class="record-content" :style="{ transform: `translateX(${record.swipeOffset || 0}px)` }"
-                @touchstart="handleTouchStart($event, record)" @touchmove="handleTouchMove($event, record)"
-                @touchend="handleTouchEnd($event, record)" @click="editRecord(record.id)">
-                <div class="record-left">
-                  <div class="category-icon" :style="{ borderColor: getCategoryColor(record.type, record.category) }">
-                    {{ getCategoryIcon(record.type, record.category) }}
-                  </div>
-                  <div class="record-info">
-                    <div class="category-name">{{ getCategoryName(record.type, record.category) }}</div>
-                    <div v-if="record.note" class="record-note">{{ record.note }}</div>
-                  </div>
+        <div v-else class="record-groups">
+          <JaggedCard v-for="group in recordGroups" :key="group.date" class="record-group-card" border-color="#ff6b6b"
+            border-width="2px" background="white">
+            <div class="record-group">
+              <!-- 日期和余额 -->
+              <div class="date-header">
+                <div class="date-info">
+                  <div class="date-line"></div>
+                  <span class="date-text">{{ formatDate(group.date) }}</span>
                 </div>
-                <div class="record-amount" :class="{ 'income': record.type === 'income' }">
-                  {{ record.type === 'income' ? '+' : '–' }} {{ formatAmount(record.amount) }}
+                <div class="balance-info">
+                  <span class="balance-label">结余:</span>
+                  <span class="balance-amount" :class="{ 'negative': group.balance < 0 }">
+                    {{ formatAmount(Math.abs(group.balance)) }}
+                  </span>
                 </div>
               </div>
-              <div class="delete-button" @click="deleteRecord(record.id)">
-                删除
+
+              <!-- 当日记录 -->
+              <div class="records">
+                <div v-for="record in group.records" :key="record.id" class="swipeable-record">
+                  <div class="record-content" :style="{ transform: `translateX(${record.swipeOffset || 0}px)` }"
+                    @touchstart="handleTouchStart($event, record)" @touchmove="handleTouchMove($event, record)"
+                    @touchend="handleTouchEnd($event, record)" @click="editRecord(record.id)">
+                    <div class="record-left">
+                      <div class="category-icon" :style="{ borderColor: getCategoryColor(record.type, record.category) }">
+                        {{ getCategoryIcon(record.type, record.category) }}
+                      </div>
+                      <div class="record-info">
+                        <div class="category-name">{{ getCategoryName(record.type, record.category) }}</div>
+                        <div v-if="record.note" class="record-note">{{ record.note }}</div>
+                      </div>
+                    </div>
+                    <div class="record-amount" :class="{ 'income': record.type === 'income' }">
+                      {{ record.type === 'income' ? '+' : '–' }} {{ formatAmount(record.amount) }}
+                    </div>
+                  </div>
+                  <div class="delete-button" @click="deleteRecord(record.id)">
+                    删除
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </JaggedCard>
         </div>
       </div>
     </div>
@@ -75,7 +68,7 @@
 </template>
 
 <script setup>
-import JaggedCard from './JaggedCard.vue'
+import JaggedCard from '../components/JaggedCard.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getRecords, groupRecordsByDate, formatDate, formatAmount, deleteRecord as deleteRecordFromStorage } from '../utils/storage'
@@ -192,23 +185,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.jagged-card {
-  width: calc(100% - 24px);
-  margin: 0 auto;
-  display: block; 
-  margin-top: 10px;
-}
-
-/* 自定义JaggedCard的样式 */
-.jagged-card :deep(.jagged-wrapper::before) {
-  border-color: #ff0000 !important; /* 纯红色边框 - 测试用 */
-  border-width: 10px !important; /* 很粗的边框 - 测试用 */
-}
-
-.jagged-card :deep(.card-content) {
-  padding: 24px !important; /* 更大的内边距 */
-}
-
 .record-list {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -216,17 +192,20 @@ onMounted(() => {
     radial-gradient(circle at 20px 20px, rgba(255, 193, 7, 0.1) 2px, transparent 2px),
     radial-gradient(circle at 60px 60px, rgba(255, 193, 7, 0.1) 2px, transparent 2px);
   background-size: 80px 80px;
+  padding: 20px 0;
+}
+
+.content-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 12px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: calc(100% - 24px);
-  margin: 0 12px;
+  margin-bottom: 20px;
 }
 
 .title {
@@ -260,19 +239,7 @@ onMounted(() => {
 }
 
 .records-container {
-  padding: 16px 12px;
-  max-width: 100%;
-}
-
-@media (min-width: 768px) {
-  .records-container {
-    padding: 24px 0;
-  }
-
-  .record-groups {
-    max-width: 600px;
-    margin: 0 auto;
-  }
+  width: 100%;
 }
 
 .empty-state {
@@ -303,16 +270,15 @@ onMounted(() => {
 .record-groups {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+}
+
+.record-group-card {
+  width: 100%;
 }
 
 .record-group {
-  background: white;
-  border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: calc(100% - 24px);
-  margin: 0 12px;
 }
 
 .date-header {
@@ -401,6 +367,7 @@ onMounted(() => {
   bottom: 0;
   width: 80px;
   background: #ff6b6b;
+  border-left: 6px solid white;
   color: white;
   display: flex;
   align-items: center;
@@ -464,18 +431,16 @@ onMounted(() => {
 .record-amount.income {
   color: #00d2d3;
 }
+</style>
 
-@media (max-width: 480px) {
-  .header {
-    padding: 16px 12px;
-  }
-
-  .records-container {
-    padding: 12px;
-  }
-
-  .record-group {
-    padding: 12px;
-  }
+<style>
+body {
+  background-image:
+    url('/images/cat-paw.png'),
+    url('/images/cat-paw.png');
+  background-size: 80px 80px, 80px 80px;
+  background-position: 0 0, 40px 40px;
+  background-repeat: repeat, repeat;
+  background-color: #ffe7d6;
 }
 </style>

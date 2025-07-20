@@ -1,12 +1,15 @@
 <template>
-  <div class="edit-record">
-    <!-- 类型切换 -->
-    <div class="type-header">
-      <button class="back-btn" @click="goBack">
-        <span class="back-icon">‹</span>
-        返回
-      </button>
-      <div class="type-tabs">
+  
+    <!-- 固定顶部区域 -->
+    <div class="fixed-header">
+      <div class="return-btn">
+        <button @click="router.back()">
+          <span class="return-icon"><</span>
+        </button>
+      </div>
+      <!-- 类型切换 -->
+      <div class="type-header">
+        <div class="type-tabs">
         <button 
           class="type-tab" 
           :class="{ active: record.type === 'expense' }"
@@ -24,21 +27,23 @@
       </div>
     </div>
 
-    <!-- 分类选择 -->
-    <div class="category-section">
-      <h3 class="section-title">选择分类</h3>
-      <div class="categories-grid">
-        <div 
-          v-for="category in currentCategories" 
-          :key="category.id"
-          class="category-item"
-          :class="{ active: record.category === category.id }"
-          @click="record.category = category.id"
-        >
-          <div class="category-icon" :style="{ borderColor: category.color }">
-            {{ category.icon }}
+    <!-- 分类选择 - 可滚动区域 -->
+    <div class="scrollable-content">
+      <div class="category-section">
+        <h3 class="section-title">选择分类</h3>
+        <div class="categories-grid">
+          <div 
+            v-for="category in currentCategories" 
+            :key="category.id"
+            class="category-item"
+            :class="{ active: record.category === category.id }"
+            @click="record.category = category.id"
+          >
+            <div class="category-icon" :style="{ borderColor: category.color }">
+              {{ category.icon }}
+            </div>
+            <span class="category-name">{{ category.name }}</span>
           </div>
-          <span class="category-name">{{ category.name }}</span>
         </div>
       </div>
     </div>
@@ -278,9 +283,7 @@ const nextMonth = () => {
   currentMonth.value = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, 1)
 }
 
-const goBack = () => {
-  router.push('/')
-}
+
 
 const saveRecord = () => {
   if (record.value.amount <= 0) {
@@ -321,33 +324,56 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.edit-record {
-  min-height: 100vh;
+
+
+/* 固定顶部区域 */
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+ 
+}
+
+.return-btn {
+ margin-bottom: 10px;
+ display: block;
+}
+
+.return-btn button {
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   display: flex;
-  flex-direction: column;
-  background: #f5f5f5;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.return-btn button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.return-icon {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
 }
 
 .type-header {
-  padding: 20px 12px;
-  background: white;
-  border-bottom: 1px solid #f0f0f0;
-  background-image: 
-    radial-gradient(circle at 20px 20px, rgba(255, 193, 7, 0.1) 2px, transparent 2px),
-    radial-gradient(circle at 60px 60px, rgba(255, 193, 7, 0.1) 2px, transparent 2px);
-  background-size: 80px 80px;
-  width: calc(100% - 24px);
-  margin: 0 12px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  padding: 60px 30px 20px 30px; /* 顶部留出返回按钮的空间 */
+  background: transparent;
+  width: 100%;
 }
 
 .back-btn {
-  display: flex;
   align-items: center;
   gap: 4px;
-  background: none;
   border: none;
   color: #666;
   font-size: 16px;
@@ -359,7 +385,6 @@ onMounted(() => {
 }
 
 .back-btn:hover {
-  background: #f0f0f0;
   color: #333;
 }
 
@@ -370,14 +395,12 @@ onMounted(() => {
 
 .type-tabs {
   display: flex;
-  background: #f0f0f0;
   border-radius: 8px;
-  padding: 4px;
 }
 
 .type-tab {
   flex: 1;
-  padding: 12px;
+  padding: 4px;
   border: none;
   background: none;
   border-radius: 6px;
@@ -389,16 +412,22 @@ onMounted(() => {
 }
 
 .type-tab.active {
-  background: white;
   color: #333;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* 可滚动内容区域 */
+.scrollable-content {
+  margin-top: 140px; /* 为固定顶部区域留出空间 */
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 300px; /* 为底部输入区域留出空间 */
+}
+
 .category-section {
-  padding: 20px 12px;
-  background: white;
-  width: calc(100% - 24px);
-  margin: 0 12px;
+  padding: 20px 0;
+  background: rgba(255, 255, 255, 0.9);
+  width: 100%;
 }
 
 .section-title {
@@ -410,8 +439,8 @@ onMounted(() => {
 
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0px;
 }
 
 .category-item {
@@ -452,14 +481,15 @@ onMounted(() => {
 }
 
 .input-section {
-  flex: 1;
-  background: #ffd93d;
-  padding: 20px 12px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: calc(100% - 24px);
-  margin: 0 12px;
+  z-index: 100;
 }
 
 .amount-section {
